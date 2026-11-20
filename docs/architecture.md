@@ -30,16 +30,34 @@ The implementation in `llm/speculative.py` follows Leviathan et al. (2023):
    asserts the output is then *bit-identical* to plain autoregressive
    decoding.
 
-**Cost model.** If a target forward costs `C`, a draft forward costs
-`c << C`, and the average number of committed tokens per round is `k`
-(`1 <= k <= gamma + 1`), then cost per token drops from `C` to roughly
-`(gamma * c + C) / k`. With `gamma=4`, a 10x cheaper draft, and a 70%
-acceptance rate, `k ≈ 2.6` and the theoretical saving is about 2x.
+**Two implementations.** `llm/speculative.py` is the pure-Python reference
+algorithm (stdlib only, unit-tested with deterministic mock models).
+`speculative_decode_hf` in `llm/hf_backend.py` is the GPU-optimized path: one
+target forward scores the entire proposed block, and all sampling stays on
+the GPU. Both share the same accept/reject semantics; the greedy output of
+each is bit-identical to decoding with the target alone.
 
-The HuggingFace backend (`llm/hf_backend.py`) keeps an internal KV-cache
-and only forwards *new* tokens when the prefix grows, which matches the
-access pattern of the speculative loop. A further optimization (roadmap) is
-to score all `gamma` positions in a single batched forward pass.
+**Batched verification.** `verify_block_logits(prefix, proposals)` keeps the
+KV-cache for `prefix[:-1]`, feeds `[prefix[-1]] + proposals` in a single
+forward, and reads `gamma + 1` logits rows: row `i` verifies proposal `i`,
+the last row is the bonus-token distribution. A rejection invalidates the
+cached KV of the diverged draft positions, so `truncate_cache(n)` crops the
+cache back to the last valid prefix at the start of every round (this also
+handles the legacy tuple cache format). The draft model's cache is cropped
+the same way. Verified numerically: batched and sequential logits differ by
+exactly `0.0`.
+
+**Cost model (and when it actually wins).** If a target forward costs `C`, a
+draft forward costs `c`, and a round commits `k` tokens
+(`1 <= k <= gamma + 1`), cost per token goes from `C` to roughly
+`(gamma * c + C_block) / k` where `C_block` is the (slightly more expensive)
+multi-token target forward. This is why *acceptance rate is everything*:
+structured, predictable text (ReAct trajectories, JSON arrays, repeated
+status lines) yields acceptance near 100% and `k ≈ gamma + 1`; free-form
+prose with a weak draft yields 20-40% and `k ≈ 2`, where the extra draft
+work can outweigh the saving. On a very fast GPU the fixed Python/kernel
+launch overhead per round also matters. See the Benchmark section in the
+README for measured numbers and the resulting analysis.
 
 ## Agent loops
 
