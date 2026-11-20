@@ -23,7 +23,7 @@ hf = ["torch>=2.1", "transformers>=4.44", "accelerate>=0.30"]
 dev = ["pytest>=8"]
 
 [project.urls]
-Homepage = "https://github.com/your-username/agentspec"
+Homepage = "https://github.com/lei080359-byte/AgentSpec"
 
 [tool.setuptools.packages.find]
 where = ["src"]

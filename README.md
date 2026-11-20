@@ -61,7 +61,7 @@ sequenceDiagram
 ## Quickstart
 
 ```bash
-git clone https://github.com/your-username/agentspec.git
+git clone https://github.com/lei080359-byte/AgentSpec.git
 cd agentspec
 
 # zero-dependency: run tests and the scripted agent demo
