@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentspec"
+version = "0.1.0"
+description = "A lightweight LLM agent framework with speculative-decoding-accelerated inference"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "AgentSpec Contributors" }]
+keywords = ["llm", "agent", "speculative-decoding", "inference", "react"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+hf = ["torch>=2.1", "transformers>=4.44", "accelerate>=0.30"]
+dev = ["pytest>=8"]
+
+[project.urls]
+Homepage = "https://github.com/your-username/agentspec"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,7 @@
+numpy>=1.24
+# Optional, for local HuggingFace models (GPU/CPU):
+# torch>=2.1
+# transformers>=4.44
+# accelerate>=0.30
+# Dev:
+# pytest>=8
